@@ -6,10 +6,8 @@ import os
 
 load_dotenv()
 
-
 engine = create_engine(url=os.getenv("DATABASE_URL"), echo=True)
-
-Base = declarative_base
+Base = declarative_base()
 
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 

@@ -5,6 +5,7 @@ class UserCreate(BaseModel):
     last_name: str
     email: str
     password: str
+    type: str
 
        
 class TokenSchema(BaseModel):

@@ -28,7 +28,7 @@ def register_user(user: UserCreate, session: Session = Depends(get_session)):
 
     encrypted_password =get_hashed_password(user.password)
 
-    new_user = User(first_name=user.first_name, last_name=user.last_name, email=user.email, password=encrypted_password )
+    new_user = User(first_name=user.first_name, last_name=user.last_name, email=user.email, password=encrypted_password,type=user.type )
 
     session.add(new_user)
     session.commit()
