@@ -1,14 +1,13 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
+from typing import Any
+from sqlalchemy.ext.declarative import as_declarative, declared_attr
 
 load_dotenv()
 
 engine = create_engine(url=os.getenv("DATABASE_URL"), echo=True)
-Base = declarative_base()
-
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 def get_session():
@@ -17,3 +16,5 @@ def get_session():
         yield session
     finally:
         session.close()
+
+

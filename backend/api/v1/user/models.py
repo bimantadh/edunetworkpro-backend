@@ -9,6 +9,7 @@ class User(BaseModel):
     email = Column(String(100), unique=True)
     password = Column(String(100))
     type = Column(String(100))
+    phone = Column(String(15))
 
 class userroles(BaseModel):
     __tablename__ = 'userroles'

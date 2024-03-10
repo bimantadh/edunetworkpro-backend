@@ -1,15 +1,19 @@
 from api.v1.user.serializers import UserCreate,TokenSchema,requestdetails
+from api.v1.university.serializers import UniversityCreate
+from api.v1.university.models import University
+from api.v1.consultancy.models import Consultancy
 import jwt
 from datetime import datetime 
 from api.v1.user.models import User
-from db.database import Base, SessionLocal,engine
+from db.session import SessionLocal
+from db.base_class import Base
 from sqlalchemy.orm import Session
 from fastapi import FastAPI, Depends, HTTPException,status
 from fastapi.security import OAuth2PasswordBearer
 from utils.auth_bearer import JWTBearer
 from functools import wraps
 from utils.utils import create_access_token,create_refresh_token,verify_password,get_hashed_password
-from db.database import get_session
+from db.session import get_session
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
@@ -26,15 +30,26 @@ def register_user(user: UserCreate, session: Session = Depends(get_session)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    encrypted_password =get_hashed_password(user.password)
+    encrypted_password = get_hashed_password(user.password)
 
-    new_user = User(first_name=user.first_name, last_name=user.last_name, email=user.email, password=encrypted_password,type=user.type )
+    new_user = User(first_name=user.first_name, last_name=user.last_name, email=user.email, password=encrypted_password, type=user.type, phone=user.phone)
 
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
 
-    return {"message":"user created successfully"}
+    # Check if the user's type is 'consultancy'
+    if user.type.lower() == 'consultancy':
+        # Create a Consultancy record
+        new_consultancy = Consultancy(
+            name=f"{user.first_name} {user.last_name}",  # Assuming first_name is used as the name for the consultancy
+            email=user.email,
+            phone=user.phone,
+        )
+        session.add(new_consultancy)
+        session.commit()
+
+    return {"message": "user created successfully"}
 
 @app.post('/login' ,response_model=TokenSchema)
 def login(request: requestdetails, db: Session = Depends(get_session)):
@@ -59,3 +74,14 @@ def login(request: requestdetails, db: Session = Depends(get_session)):
         "refresh_token": refresh,
     }
 
+
+@app.post('/university', response_model=None)
+async def create_university(user: User,university: UniversityCreate,  db: Session = Depends(get_session)):
+    if user.type.lower() == 'student':
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    elif user.type.lower() == 'consultancy':
+        new_university = University(**university.model_dump())
+        db.add(new_university)
+        db.commit()
+        db.refresh(new_university)
+        return {"message": "University created successfully", "university": new_university}
