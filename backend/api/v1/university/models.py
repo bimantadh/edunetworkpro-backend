@@ -19,4 +19,15 @@ class University(BaseModel):
     school_id= Column(Integer)
     
 
+class Course(BaseModel):
+    __tablename__ = 'course'
+    code = Column(String(50))
+    name = Column(String(50))  
+    description = Column(String(50))  
+    level = Column(String(50)) 
+    duration = Column(String(50))
+    fee = Column(Integer)
+    exams = Column(String(50)) 
+    data = Column(String(50))
+    detail_data = Column(String(50))
 

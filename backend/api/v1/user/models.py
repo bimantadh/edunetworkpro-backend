@@ -11,6 +11,8 @@ class User(BaseModel):
     type = Column(String(100))
     phone = Column(String(15))
 
+    
+
 class userroles(BaseModel):
     __tablename__ = 'userroles'
     

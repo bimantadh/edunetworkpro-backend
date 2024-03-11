@@ -2,6 +2,7 @@ from pydantic import BaseModel
 import datetime
 
 class UniversityCreate(BaseModel):
+    code:str
     name: str
     description: str
     country: str
@@ -17,3 +18,22 @@ class UniversityCreate(BaseModel):
     school_id: int
     data: str
 
+
+class UniversityDetails(BaseModel):
+    name: str
+    country: str
+    website : str
+    bachelors_fee: int
+    masters_fee: int
+    
+
+class CourseCreate(BaseModel):
+    code: str
+    name: str
+    description: str
+    level: str
+    duration: str
+    fee: int
+    exams: str
+    data: str
+    detail_data: str

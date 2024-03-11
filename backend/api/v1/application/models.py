@@ -6,7 +6,10 @@ from api.v1.base.base import BaseModel
 
 
 class Application(BaseModel):
-    consultancy_id = Column(int)
-    university_id =Column(int)
-    course_id=Column(int)
+    __tablename__ = 'application'
+    consultancy_name = Column(String(50))
+    university_name =Column(String(50))
+    course_name=Column(String(50))
+    status = Column(String(50))
     
+

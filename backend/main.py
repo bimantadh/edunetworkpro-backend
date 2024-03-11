@@ -1,9 +1,14 @@
 from api.v1.user.serializers import UserCreate,TokenSchema,requestdetails
-from api.v1.university.serializers import UniversityCreate
-from api.v1.university.models import University
+from api.v1.university.serializers import UniversityCreate,UniversityDetails, CourseCreate
+from api.v1.university.models import University,Course
 from api.v1.consultancy.models import Consultancy
+from api.v1.application.models import Application
+from api.v1.application.serializers import ApplicationCreate
+from api.v1.consultancy.serializers import ConsultancyDetails
+from typing import Union
 import jwt
 from datetime import datetime 
+from sqlalchemy.orm import joinedload
 from api.v1.user.models import User
 from db.session import SessionLocal
 from db.base_class import Base
@@ -73,15 +78,68 @@ def login(request: requestdetails, db: Session = Depends(get_session)):
         "access_token": access,
         "refresh_token": refresh,
     }
-
-
-@app.post('/university', response_model=None)
-async def create_university(user: User,university: UniversityCreate,  db: Session = Depends(get_session)):
-    if user.type.lower() == 'student':
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    elif user.type.lower() == 'consultancy':
-        new_university = University(**university.model_dump())
+@app.post('/university')
+async def create_university(university: UniversityCreate, db: Session = Depends(get_session)):
+    try:
+        new_university = University(code=university.code, name=university.name, description=university.description, country=university.country, location=university.location, address=university.address, website=university.website, type=university.type, bachelors_fee=university.bachelors_fee, masters_fee=university.masters_fee, exams=university.exams, established=university.established, icon=university.icon, school_id=university.school_id)
         db.add(new_university)
         db.commit()
         db.refresh(new_university)
-        return {"message": "University created successfully", "university": new_university}
+        return {"message": "University created successfully"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/university/{university_id}", response_model=UniversityDetails)
+async def get_university_details(university_id: int, db: Session = Depends(get_session)):
+    university = db.query(University).filter(University.id == university_id).first()
+    if not university:
+        raise HTTPException(status_code=404, detail="University not found")
+    
+    return university
+
+@app.get("/consultancy/{consultancy_id}", response_model = ConsultancyDetails)
+async def get_consultancy_details(consultancy_id:int, db: Session = Depends(get_session)):
+    consultancy = db.query(Consultancy).filter(Consultancy.id == consultancy_id).first()
+    if not consultancy:
+        raise HTTPException(status_code=404, detail= "Consultancy not found")
+    return consultancy
+    
+@app.post("/course")
+async def create_course(course: CourseCreate, db:Session = Depends(get_session)):
+    try:
+        new_course = Course(code=course.code, name=course.name, description=course.description, level=course.level, fee=course.fee, exams=course.exams, data=course.data, detail_data=course.detail_data)
+        db.add(new_course)
+        db.commit()
+        db.refresh(new_course)
+        return {"message": "Course has been created successfully"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+
+@app.post("/application")
+async def create_application(application: ApplicationCreate, db: Session = Depends(get_session)):
+    try:
+        consultancy = db.query(Consultancy).filter(Consultancy.id == application.consultancy_id).first()
+        if not consultancy:
+            raise HTTPException(status_code=404, detail="Consultancy not found")
+        consultancy_name = consultancy.name
+        
+        university = db.query(University).filter(University.id == application.university_id).first()
+        if not university:
+            raise HTTPException(status_code=404, detail="University not found")
+        university_name = university.name
+        
+        course = db.query(Course).filter(Course.id == application.course_id).first()
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found")
+        course_name = course.name
+        
+        new_application = Application(consultancy_name=consultancy_name, university_name=university_name, course_name=course_name, status=application.status)
+        db.add(new_application)
+        db.commit()
+        db.refresh(new_application)
+        return {"message": "Student Application created successfully"}
+    except Exception as e:
+        return {"error": str(e)}
