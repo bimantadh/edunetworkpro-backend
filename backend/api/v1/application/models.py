@@ -7,9 +7,9 @@ from api.v1.base.base import BaseModel
 
 class Application(BaseModel):
     __tablename__ = 'application'
-    consultancy_name = Column(String(50))
-    university_name =Column(String(50))
-    course_name=Column(String(50))
+    consultancy_id = Column(Integer)
+    university_id = Column(Integer)
+    course_id= Column(Integer)
     status = Column(String(50))
     
 

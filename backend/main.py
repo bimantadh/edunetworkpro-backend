@@ -19,12 +19,9 @@ from utils.auth_bearer import JWTBearer
 from functools import wraps
 from utils.utils import create_access_token,create_refresh_token,verify_password,get_hashed_password
 from db.session import get_session
+from config.config import ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES,ALGORITHM,JWT_SECRET_KEY,JWT_REFRESH_SECRET_KEY
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
-REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
-ALGORITHM = "HS256"
-JWT_SECRET_KEY = "narscbjim@$@&^@&%^&RFghgjvbdsha"   # should be kept secret
-JWT_REFRESH_SECRET_KEY = "13ugfdfgh@#$%^@&jkl45678902"
+
 
 app = FastAPI()
 
@@ -124,19 +121,19 @@ async def create_application(application: ApplicationCreate, db: Session = Depen
         consultancy = db.query(Consultancy).filter(Consultancy.id == application.consultancy_id).first()
         if not consultancy:
             raise HTTPException(status_code=404, detail="Consultancy not found")
-        consultancy_name = consultancy.name
+        consultancy_id = consultancy.id
         
         university = db.query(University).filter(University.id == application.university_id).first()
         if not university:
             raise HTTPException(status_code=404, detail="University not found")
-        university_name = university.name
+        university_id= university.id
         
         course = db.query(Course).filter(Course.id == application.course_id).first()
         if not course:
             raise HTTPException(status_code=404, detail="Course not found")
-        course_name = course.name
+        course_id = course.id
         
-        new_application = Application(consultancy_name=consultancy_name, university_name=university_name, course_name=course_name, status=application.status)
+        new_application = Application(consultancy_id=consultancy.id, university_id=university.id, course_id=course.id, status=application.status)
         db.add(new_application)
         db.commit()
         db.refresh(new_application)
