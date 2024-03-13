@@ -1,9 +1,11 @@
 import jwt
+
 from jwt.exceptions import InvalidTokenError
 from fastapi import FastAPI, Depends, HTTPException,status
 from fastapi import Request, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from config.config import ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES,ALGORITHM,JWT_SECRET_KEY,JWT_REFRESH_SECRET_KEY
+
 
 
 def decodeJWT(jwtoken: str):
@@ -42,3 +44,4 @@ class JWTBearer(HTTPBearer):
         return isTokenValid
 
 jwt_bearer = JWTBearer()
+

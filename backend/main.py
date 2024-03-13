@@ -3,8 +3,8 @@ from api.v1.university.serializers import UniversityCreate,UniversityDetails, Co
 from api.v1.university.models import University,Course
 from api.v1.consultancy.models import Consultancy
 from api.v1.application.models import Application
-from api.v1.application.serializers import ApplicationCreate
-from api.v1.consultancy.serializers import ConsultancyDetails
+from api.v1.application.serializers import ApplicationCreate, ApplicationDetails
+from api.v1.consultancy.serializers import ConsultancyDetails,StudentConsultancy
 from typing import Union
 import jwt
 from datetime import datetime 
@@ -18,7 +18,7 @@ from fastapi.security import OAuth2PasswordBearer
 from utils.auth_bearer import JWTBearer
 from functools import wraps
 from utils.utils import create_access_token,create_refresh_token,verify_password,get_hashed_password
-from db.session import get_session
+from db.session import get_session,get_current_user
 from config.config import ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES,ALGORITHM,JWT_SECRET_KEY,JWT_REFRESH_SECRET_KEY
 
 
@@ -76,7 +76,7 @@ def login(request: requestdetails, db: Session = Depends(get_session)):
         "refresh_token": refresh,
     }
 @app.post('/university')
-async def create_university(university: UniversityCreate, db: Session = Depends(get_session)):
+async def create_university(university: UniversityCreate, db: Session = Depends(get_session),token: str = Depends(JWTBearer)):
     try:
         new_university = University(code=university.code, name=university.name, description=university.description, country=university.country, location=university.location, address=university.address, website=university.website, type=university.type, bachelors_fee=university.bachelors_fee, masters_fee=university.masters_fee, exams=university.exams, established=university.established, icon=university.icon, school_id=university.school_id)
         db.add(new_university)
@@ -88,7 +88,7 @@ async def create_university(university: UniversityCreate, db: Session = Depends(
 
 
 @app.get("/university/{university_id}", response_model=UniversityDetails)
-async def get_university_details(university_id: int, db: Session = Depends(get_session)):
+async def get_university_details(university_id: int, db: Session = Depends(get_session),token: str = Depends(JWTBearer)):
     university = db.query(University).filter(University.id == university_id).first()
     if not university:
         raise HTTPException(status_code=404, detail="University not found")
@@ -96,14 +96,14 @@ async def get_university_details(university_id: int, db: Session = Depends(get_s
     return university
 
 @app.get("/consultancy/{consultancy_id}", response_model = ConsultancyDetails)
-async def get_consultancy_details(consultancy_id:int, db: Session = Depends(get_session)):
+async def get_consultancy_details(consultancy_id:int, db: Session = Depends(get_session),token: str = Depends(JWTBearer)):
     consultancy = db.query(Consultancy).filter(Consultancy.id == consultancy_id).first()
     if not consultancy:
         raise HTTPException(status_code=404, detail= "Consultancy not found")
     return consultancy
     
 @app.post("/course")
-async def create_course(course: CourseCreate, db:Session = Depends(get_session)):
+async def create_course(course: CourseCreate, db:Session = Depends(get_session),token: str = Depends(JWTBearer)):
     try:
         new_course = Course(code=course.code, name=course.name, description=course.description, level=course.level, fee=course.fee, exams=course.exams, data=course.data, detail_data=course.detail_data)
         db.add(new_course)
@@ -116,7 +116,7 @@ async def create_course(course: CourseCreate, db:Session = Depends(get_session))
 
 
 @app.post("/application")
-async def create_application(application: ApplicationCreate, db: Session = Depends(get_session)):
+async def create_application(application: ApplicationCreate, db: Session = Depends(get_session),token: str = Depends(JWTBearer)):
     try:
         consultancy = db.query(Consultancy).filter(Consultancy.id == application.consultancy_id).first()
         if not consultancy:
@@ -140,3 +140,65 @@ async def create_application(application: ApplicationCreate, db: Session = Depen
         return {"message": "Student Application created successfully"}
     except Exception as e:
         return {"error": str(e)}
+
+@app.get("/application/{application_id}", response_model=ApplicationDetails)
+def get_application_details(application_id: int, db: Session = Depends(get_session)):
+    application = db.query(Application).filter(Application.id == application_id).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    consultancy = db.query(Consultancy).filter(Consultancy.id == application.consultancy_id).first()
+    if not consultancy:
+        raise HTTPException(status_code=404, detail="Consultancy not found")
+    
+    university = db.query(University).filter(University.id == application.university_id).first()
+    if not university:
+        raise HTTPException(status_code=404, detail="University not found")
+    
+    course = db.query(Course).filter(Course.id == application.course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    application_details = ApplicationDetails(
+        consultancy_name=consultancy.name,
+        university_name=university.name,
+        course_name=course.name,
+        status=application.status
+    )
+    return application_details
+
+
+
+@app.get("/consultancy/{consultancy_id}/applications", response_model=list[StudentConsultancy])
+def get_consultancy_applications(consultancy_id: int, db: Session = Depends(get_current_user)):
+    applications = db.query(Application).filter(Application.consultancy_id == consultancy_id).all()
+    
+    if not applications:
+        raise HTTPException(status_code=404, detail="No applications found for this consultancy")
+    
+    consultancy_applications = []
+    for application in applications:
+        student = db.query(User).filter(User.id==application.id, User.type == 'student').first()
+        if not student:
+            raise HTTPException(status_code=404, detail="Student not found")
+        
+        university = db.query(University).filter(University.id == application.university_id).first()
+        if not university:
+            raise HTTPException(status_code=404, detail="University not found")
+        
+        course = db.query(Course).filter(Course.id == application.course_id).first()
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found")
+        
+        student_name = f"{student.first_name} {student.last_name}"
+        consultancy_applications.append({
+            "student_name": student_name,
+            "country_name": university.country,
+            "university_applied": university.name,
+            "status": application.status,
+            "phone": student.phone
+        })
+    
+    return consultancy_applications
+
+

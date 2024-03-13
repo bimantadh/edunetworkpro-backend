@@ -5,6 +5,7 @@ from typing import Union, Any
 import jwt
 from config.config import ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_MINUTES,ALGORITHM,JWT_SECRET_KEY,JWT_REFRESH_SECRET_KEY
 
+
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_hashed_password(password: str) -> str:
@@ -36,3 +37,4 @@ def create_refresh_token(subject: Union[str, Any], expires_delta: int = None) ->
     to_encode = {"exp": expires_delta, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
     return encoded_jwt
+
