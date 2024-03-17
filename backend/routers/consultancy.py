@@ -1,5 +1,16 @@
+from api.v1.consultancy.models import Consultancy
+from api.v1.university.models import University,Course
+from api.v1.user.models import User
+from api.v1.application.models import Application
+from api.v1.consultancy.serializers import ConsultancyDetails,StudentConsultancy
+from fastapi import HTTPException
+from db.session import Session, Depends, get_session,get_current_user
+from utils.auth_bearer import jwt_bearer
+from fastapi import APIRouter
 
-@app.get("/consultancy/{consultancy_id}", response_model = ConsultancyDetails)
+router = APIRouter()
+
+@router.get("/consultancy/{consultancy_id}", response_model = ConsultancyDetails)
 async def get_consultancy_details(consultancy_id:int, db: Session = Depends(get_session),token: str = Depends(jwt_bearer)):
     consultancy = db.query(Consultancy).filter(Consultancy.id == consultancy_id).first()
     if not consultancy:
@@ -8,7 +19,7 @@ async def get_consultancy_details(consultancy_id:int, db: Session = Depends(get_
 
 
 
-@app.get("/consultancy/applications", response_model=list[StudentConsultancy])
+@router.get("/consultancy/applications", response_model=list[StudentConsultancy])
 def get_consultancy_applications(db: Session = Depends(get_current_user)):
     # applications = db.query(Application).filter(Application.consultancy_id == consultancy_id).all()
     

@@ -1,5 +1,17 @@
+from fastapi import APIRouter,UploadFile,HTTPException
+import mimetypes
+from api.v1.file.models import File
+import os, time
+from db.session import Session, Depends, get_session
+from api.v1.file.file import time_str, BASE_DIR, UPLOAD_DIR
+from fastapi.responses import FileResponse
 
-@app.post('/upload/download')
+router = APIRouter()
+
+
+
+
+@router.post('/upload/download')
 async def upload_download(file: UploadFile, db: Session = Depends(get_session)):
     try:
         content_type, _ = mimetypes.guess_type(file.filename)

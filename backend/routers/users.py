@@ -1,14 +1,14 @@
 from api.v1.user.serializers import UserCreate,TokenSchema,requestdetails
-from fastapi import FastAPI,Depends,HTTPException,status
+from fastapi import APIRouter,Depends,HTTPException,status
 from db.session import Session, get_session
 from api.v1.user.models import User
 from utils.utils import get_hashed_password, verify_password, create_access_token, create_refresh_token
 from api.v1.consultancy.models import Consultancy
 
 
-app = FastAPI()
+router = APIRouter()
 
-@app.post("/register")
+@router.post("/register")
 def register_user(user: UserCreate, session: Session = Depends(get_session)):
     existing_user = session.query(User).filter_by(email=user.email).first()
     if existing_user:
@@ -35,7 +35,7 @@ def register_user(user: UserCreate, session: Session = Depends(get_session)):
 
     return {"message": "user created successfully"}
 
-@app.post('/login' ,response_model=TokenSchema)
+@router.post('/login' ,response_model=TokenSchema)
 def login(request: requestdetails, db: Session = Depends(get_session)):
     user = db.query(User).filter(User.email == request.email).first()
     if user is None:

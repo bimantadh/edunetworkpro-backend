@@ -1,5 +1,5 @@
 from api.v1.application.serializers import ApplicationCreate,ApplicationDetails
-from fastapi import FastAPI,Depends,HTTPException,status
+from fastapi import Depends,HTTPException,status,APIRouter
 from db.session import Session, get_session
 from api.v1.user.models import User
 from api.v1.application.models import Application
@@ -9,8 +9,8 @@ from utils.auth_bearer import jwt_bearer
 
 
 
-app = FastAPI()
-@app.post("/application")
+router = APIRouter()
+@router.post("/application")
 async def create_application(application: ApplicationCreate, db: Session = Depends(get_session),token: str = Depends(jwt_bearer)):
     try:
         consultancy = db.query(Consultancy).filter(Consultancy.id == application.consultancy_id).first()
@@ -36,7 +36,7 @@ async def create_application(application: ApplicationCreate, db: Session = Depen
     except Exception as e:
         return {"error": str(e)}
 
-@app.get("/application/{application_id}", response_model=ApplicationDetails)
+@router.get("/application/{application_id}", response_model=ApplicationDetails)
 def get_application_details(application_id: int, db: Session = Depends(get_session)):
     application = db.query(Application).filter(Application.id == application_id).first()
     if not application:
