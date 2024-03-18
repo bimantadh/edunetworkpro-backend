@@ -6,7 +6,7 @@ from utils.auth_bearer import jwt_bearer
 from db.session import Session, Depends, get_session,get_current_user
 
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1")
 
 
 @router.post('/university')

@@ -6,12 +6,12 @@ from db.session import Session, Depends, get_session
 from api.v1.file.file import time_str, BASE_DIR, UPLOAD_DIR
 from fastapi.responses import FileResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1")
 
 
 
 
-@router.post('/upload/download')
+@router.post('/upload')
 async def upload_download(file: UploadFile, db: Session = Depends(get_session)):
     try:
         content_type, _ = mimetypes.guess_type(file.filename)

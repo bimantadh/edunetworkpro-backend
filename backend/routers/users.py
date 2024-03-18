@@ -6,7 +6,7 @@ from utils.utils import get_hashed_password, verify_password, create_access_toke
 from api.v1.consultancy.models import Consultancy
 
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1")
 
 @router.post("/register")
 def register_user(user: UserCreate, session: Session = Depends(get_session)):

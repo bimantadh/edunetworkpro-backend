@@ -9,7 +9,7 @@ from utils.auth_bearer import jwt_bearer
 
 
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1")
 @router.post("/application")
 async def create_application(application: ApplicationCreate, db: Session = Depends(get_session),token: str = Depends(jwt_bearer)):
     try:
