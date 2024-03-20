@@ -2,7 +2,7 @@ from api.v1.consultancy.models import Consultancy
 from api.v1.university.models import University,Course
 from api.v1.user.models import User
 from api.v1.application.models import Application
-from api.v1.consultancy.serializers import ConsultancyDetails,StudentConsultancy
+from api.v1.consultancy.serializers import ConsultancyDetails,StudentConsultancy,ConsultancyDashboard
 from fastapi import HTTPException
 from db.session import Session, Depends, get_session,get_current_user
 from utils.auth_bearer import jwt_bearer
@@ -19,9 +19,12 @@ async def get_consultancy_details(consultancy_id:int, db: Session = Depends(get_
 
 
 
-
 @router.get("/consultancy/applications", response_model=list[StudentConsultancy])
-def get_consultancy_applications(db: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+def get_consultancy_applications(db: Session = Depends(get_session), token: str = Depends(jwt_bearer)):
+    current_user = get_current_user(token)
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
     consultancy_id = current_user.id 
     
     applications = db.query(Application).filter(Application.consultancy_id == consultancy_id).all()
@@ -53,3 +56,5 @@ def get_consultancy_applications(db: Session = Depends(get_session), current_use
         })
     
     return consultancy_applications
+# @router.get("/consultancy/dashboard", response_model=ConsultancyDashboard)
+# async def consultancy_dashboard(db= Session(get_session)):
