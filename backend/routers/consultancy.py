@@ -2,15 +2,16 @@ from api.v1.consultancy.models import Consultancy
 from api.v1.university.models import University,Course
 from api.v1.user.models import User
 from api.v1.application.models import Application
-from api.v1.consultancy.serializers import ConsultancyDetails,StudentConsultancy,ConsultancyDashboard
+from api.v1.consultancy.serializers import ConsultancyDetails,StudentConsultancy,ConsultancyDashboard,StudentDashboard
 from fastapi import HTTPException
 from db.session import Session, Depends, get_session,get_current_user
 from utils.auth_bearer import jwt_bearer
 from fastapi import APIRouter
+from sqlalchemy import func
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1/consultancy")
 
-@router.get("/consultancy/{consultancy_id}", response_model = ConsultancyDetails)
+@router.get("/{consultancy_id}", response_model = ConsultancyDetails)
 async def get_consultancy_details(consultancy_id:int, db: Session = Depends(get_session),token: str = Depends(jwt_bearer)):
     consultancy = db.query(Consultancy).filter(Consultancy.id == consultancy_id).first()
     if not consultancy:
@@ -19,7 +20,7 @@ async def get_consultancy_details(consultancy_id:int, db: Session = Depends(get_
 
 
 
-@router.get("/consultancy/applications", response_model=list[StudentConsultancy])
+@router.get("/applications", response_model=list[StudentConsultancy])
 def get_consultancy_applications(db: Session = Depends(get_session), token: str = Depends(jwt_bearer)):
     current_user = get_current_user(token)
     if current_user is None:
@@ -56,5 +57,27 @@ def get_consultancy_applications(db: Session = Depends(get_session), token: str 
         })
     
     return consultancy_applications
-# @router.get("/consultancy/dashboard", response_model=ConsultancyDashboard)
-# async def consultancy_dashboard(db= Session(get_session)):
+
+
+    
+@router.get("/dashboard", response_model=ConsultancyDashboard)
+def get_consultancy_dashboard(db:Session = Depends(get_session), token: str = Depends(jwt_bearer)):
+    try:
+        current_user = get_current_user(token, db=db)
+        if current_user is None:
+            raise HTTPException(status_code=401, detail= "Invalid or expired token")
+        total_students = db.query(func.count(Application.id)).filter(User.type == 'students').scalar()
+        in_progress_count = db.query(func.count(Application.id)).filter(Application.status == 'inprogress').scalar()
+        accepted_count = db.query(func.count(Application.id)).filter( Application.status == 'accepted').scalar()
+
+        return ConsultancyDashboard(
+        student_counseled= total_students,
+        applications_in_progress= in_progress_count,
+        sucessful_placements= accepted_count
+
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+

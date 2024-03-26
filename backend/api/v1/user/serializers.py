@@ -10,9 +10,16 @@ class UserCreate(BaseModel):
 
        
 class TokenSchema(BaseModel):
-    access_token: str
-    refresh_token: str
+    access: str
+    token_type : str
+    user_type : str
 
 class requestdetails(BaseModel):
     email:str
     password:str
+
+class UserDetails(BaseModel):
+    first_name : str
+    last_name : str
+    email : str
+    type : str

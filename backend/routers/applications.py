@@ -37,7 +37,7 @@ async def create_application(application: ApplicationCreate, db: Session = Depen
         return {"error": str(e)}
 
 @router.get("/application/{application_id}", response_model=ApplicationDetails)
-def get_application_details(application_id: int, db: Session = Depends(get_session)):
+def get_application_details(application_id: int, db: Session = Depends(get_session),token: str = Depends(jwt_bearer)):
     application = db.query(Application).filter(Application.id == application_id).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")

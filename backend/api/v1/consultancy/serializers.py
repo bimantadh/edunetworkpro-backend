@@ -27,3 +27,10 @@ class ConsultancyDashboard(BaseModel):
     applications_in_progress : int
     sucessful_placements : int
 
+class CreateNotes(BaseModel):
+    note: str
+    message : str
+
+class CreateReminder(BaseModel):
+    reminder :str
+    message : str

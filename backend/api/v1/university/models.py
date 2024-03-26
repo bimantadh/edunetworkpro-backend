@@ -41,3 +41,20 @@ class Course(BaseModel):
     data = Column(String(50))
     detail_data = Column(String(50))
 
+
+class UniversityProgram(BaseModel):
+    __tablename__ = 'universityprogram'
+    university_id = Column(Integer)
+    code = Column(Integer)
+    program = Column(String(50))
+    program_id = Column(Integer)
+    data = Column(String(50))
+    programcourses = Course
+
+
+
+
+
+
+
+

@@ -10,6 +10,7 @@ from jose import JWTError
 from api.v1.user.models import User
 from fastapi import FastAPI, Depends, HTTPException,status,Request
 import jwt
+
 from utils.auth_bearer import jwt_bearer
 from utils.utils import create_access_token, create_refresh_token, ALGORITHM, JWT_SECRET_KEY, JWT_REFRESH_SECRET_KEY
 
@@ -23,20 +24,23 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 def get_session():
     session = SessionLocal()
     try:
-        yield session
+        return session
     finally:
         session.close()
 
 
-def get_current_user(token: str = Depends(jwt_bearer), db: Session = Depends(SessionLocal)):
+def get_current_user(token: str = Depends(jwt_bearer), db: Session = Depends(get_session)):
     try:
-        payload = jwt.decode(token, "secret_key", algorithms=["HS256"])
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=ALGORITHM)
         user_id: int = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-        db_user = db.query(User).filter(User.id == user_id).first()
-        if db_user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+        with db as session:
+            db_user = session.query(User).filter(User.id == user_id).first()
+            if db_user is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
         return db_user
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")

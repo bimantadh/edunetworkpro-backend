@@ -23,5 +23,22 @@ class Consultancy(BaseModel):
     university = relationship('University', back_populates='consultancies')
 
 
+class UniversityConsultancy(BaseModel):
+    __tablename__ = 'universityconsultancy'
+    university_id = Column(Integer)
+    consultancy_id = Column(Integer)
 
 
+class ConsultancyNotes(BaseModel):
+    __tablename__ = 'note'
+    note = Column(String(50))
+    message = Column(String (100))
+    reminder = Column(String(50))
+
+class Notification(BaseModel):
+    __tablename__ = 'notification'
+
+    message = Column(String (100))
+    notification_from= Column(String(50))
+    student_name = Column(String(50))
+    type = Column(String(50))
