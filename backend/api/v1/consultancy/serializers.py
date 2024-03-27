@@ -34,3 +34,15 @@ class CreateNotes(BaseModel):
 class CreateReminder(BaseModel):
     reminder :str
     message : str
+
+class CreateNotification(BaseModel):
+    message : str
+    notification_from : str
+    student_name : str
+    type : str
+
+class ShowNotification(BaseModel):
+    message : str
+    notification_from : str
+    student_name : str
+    type : str
