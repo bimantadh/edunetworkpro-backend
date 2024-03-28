@@ -31,9 +31,14 @@ class UniversityConsultancy(BaseModel):
 
 class ConsultancyNotes(BaseModel):
     __tablename__ = 'note'
-    note = Column(String(50))
-    message = Column(String (100))
-    reminder = Column(String(50))
+    
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey('users.id'))
+    message = Column(String(100))
+    reminder = Column(String(100))
+    notes = Column(String(100))
+
+    student = relationship("User", back_populates="notes")
 
 class Notification(BaseModel):
     __tablename__ = 'notification'
@@ -42,3 +47,20 @@ class Notification(BaseModel):
     notification_from= Column(String(50))
     student_name = Column(String(50))
     type = Column(String(50))
+
+
+class Inbox(BaseModel):
+    __tablename__ = 'inbox'
+
+    student_email = Column(String)
+    student_name = Column(String)
+    message = Column(String)
+    date_time = Column(String)
+
+class Sent(BaseModel):
+    __tablename__ = 'sent'
+
+    to = Column(String)
+    student_name = Column(String)
+    message = Column(String)
+    date_time = Column(String)

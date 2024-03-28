@@ -37,3 +37,5 @@ class CourseCreate(BaseModel):
     exams: str
     data: str
     detail_data: str
+
+    

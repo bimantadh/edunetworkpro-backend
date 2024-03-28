@@ -46,3 +46,21 @@ class ShowNotification(BaseModel):
     notification_from : str
     student_name : str
     type : str
+
+
+class InboxMessage(BaseModel):
+    from_email: str
+    student_name: str
+    message: str
+    date_time: str
+
+class SentMessage(BaseModel):
+    to_email: str
+    student_name: str
+    message: str
+    date_time: str
+
+class MessageCreate(BaseModel):
+    to: str
+    subject: str
+    message: str
